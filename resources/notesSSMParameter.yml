@@ -1,0 +1,8 @@
+Resources:
+  cognitoSSMParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /notes/${self:provider.stage}/userPoolArn
+      Type: String
+      Value:
+        Fn::GetAtt: [cognitoUserPool, Arn]

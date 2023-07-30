@@ -1,0 +1,28 @@
+# Cognito User Pool resource template
+Resources:
+  cognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: NotesAppUserPool-${self:provider.stage}
+  cognitoUserPoolWebClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref cognitoUserPool
+      ClientName: Web
+      AllowedOAuthFlows:
+        - implicit
+      AllowedOAuthFlowsUserPoolClient: true
+      SupportedIdentityProviders:
+        - COGNITO
+      AllowedOAuthScopes:
+        - phone
+        - email
+        - profile
+        - openid
+      CallbackURLs:
+        - http://localhost:3000
+  cognitoUserPoolWebDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: lbdnotesappcgdemo-${self:provider.stage}
+      UserPoolId: !Ref cognitoUserPool
