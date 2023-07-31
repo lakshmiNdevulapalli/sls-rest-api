@@ -16,7 +16,7 @@ phases:
       - echo Running tests
       - npm test
       - echo Packaging the service
-      - serverless package --package my-arifacts --stage dev
+      - serverless package --package my-arifacts --stage qa
 artifacts:
   files:
     - my-arifacts/*
