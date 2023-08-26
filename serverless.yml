@@ -79,9 +79,9 @@ functions:
           path: notes
           authorizer:
             name: userpool_authorizer
-            arn: ${ssm:/notes/${self:provider.stage}/userPoolArn}
-            #type: COGNITO_USER_POOLS
-            #arn: !GetAtt cognitoUserPool.Arn
+            type: COGNITO_USER_POOLS
+            arn: !GetAtt cognitoUserPool.Arn
+            #arn: ${ssm:/notes/${self:provider.stage}/userPoolArn}
 
 plugins:
   - serverless-iam-roles-per-function
