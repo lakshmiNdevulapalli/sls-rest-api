@@ -1,6 +1,16 @@
+import {
+  APIGatewayTokenAuthorizerEvent,
+  Context,
+  AuthResponse,
+} from "aws-lambda";
+import { Effect } from "aws-sdk/clients/lexmodelsv2";
+
 const { CognitoJwtVerifier } = require("aws-jwt-verify");
 const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
 const COGNITO_USER_POOL_CLIENT = process.env.COGNITO_USER_POOL_CLIENT;
+
+console.log("COGNITO_USER_POOL_ID:", process.env.COGNITO_USERPOOL_ID);
+console.log("COGNITO_USER_POOL_CLIENT:", process.env.COGNITO_USER_POOL_CLIENT);
 
 const jwtVerifier = CognitoJwtVerifier.create({
   userPoolId: COGNITO_USER_POOL_ID,
@@ -8,12 +18,16 @@ const jwtVerifier = CognitoJwtVerifier.create({
   clientId: COGNITO_USER_POOL_CLIENT,
 });
 
-const generatePolicy = (principalId, effect, resource) => {
-  var tmp = resource.split(":");
-  var apiGatewayArnTmp = tmp[5].split("/");
+const generatePolicy = (
+  principalId: string,
+  effect: Effect,
+  resource: string
+): AuthResponse => {
+  let tmp: string[] = resource.split(":");
+  let apiGatewayArnTmp: string[] = tmp[5].split("/");
 
   // Create wildcard resource
-  var resource =
+  resource =
     tmp[0] +
     ":" +
     tmp[1] +
@@ -27,7 +41,7 @@ const generatePolicy = (principalId, effect, resource) => {
     apiGatewayArnTmp[0] +
     "/*/*";
 
-  var authResponse = {};
+  let authResponse = {} as AuthResponse;
 
   authResponse.principalId = principalId;
   if (effect && resource) {
@@ -47,10 +61,15 @@ const generatePolicy = (principalId, effect, resource) => {
     foo: "bar",
   };
   console.log(JSON.stringify(authResponse));
+  console.log();
   return authResponse;
 };
 
-exports.handler = async (event, context, callback) => {
+export const handler = async (
+  event: APIGatewayTokenAuthorizerEvent,
+  context: Context,
+  callback: any
+) => {
   // lambda authorizer code
   var token = event.authorizationToken;
 
@@ -63,7 +82,8 @@ exports.handler = async (event, context, callback) => {
     callback("Error: Invalid Token");
   }
 
-  // "allow" or "deny" - Mock example
+  //temp auth
+  // "allow" or "deny" - Mock example for test
   /* switch (token) {
     case "allow":
       callback(null, generatePolicy("user", "Allow", event.methodArn));

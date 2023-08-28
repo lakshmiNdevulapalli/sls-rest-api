@@ -1,32 +1,41 @@
 "use strict";
 
-const { DynamoDB } = require("@aws-sdk/client-dynamodb");
-const {
+import { APIGatewayEvent, Context, APIGatewayProxyCallback } from "aws-lambda";
+import {
   DynamoDBDocumentClient,
   PutCommand,
   UpdateCommand,
   DeleteCommand,
   ScanCommand,
-} = require("@aws-sdk/lib-dynamodb");
+} from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb"; // Note this import
 
-const client = new DynamoDB({ region: "us-east-1" });
+// Create an instance of DynamoDBClient
+const client = new DynamoDBClient({ region: "us-east-1" });
+
+// Create DynamoDB Document Client
 const dbDocClient = DynamoDBDocumentClient.from(client);
+
 const NOTES_TABLE_NAME = process.env.NOTES_TABLE_NAME;
 
-const send = (statusCode, data) => {
+const send = (statusCode: number, data: string) => {
   return {
     statusCode,
     body: JSON.stringify(data),
   };
 };
 
-module.exports.createNote = async (event, context, callback) => {
+export const createNote = async (
+  event: APIGatewayEvent,
+  context: Context,
+  callback: APIGatewayProxyCallback
+) => {
   context.callbackWaitsForEmptyEventLoop = false;
-  let data = JSON.parse(event.body);
+  let data = JSON.parse(event.body as string);
 
   try {
     const params = {
-      TableName: NOTES_TABLE_NAME,
+      TableName: NOTES_TABLE_NAME as string,
       Item: {
         notesId: data.id,
         title: data.title,
@@ -38,16 +47,22 @@ module.exports.createNote = async (event, context, callback) => {
     await dbDocClient.send(new PutCommand(params));
     //callback(null, send(201, data));
     return send(201, data);
-  } catch (err) {
+  } catch (err: unknown) {
     //callback(null, send(500, err.message));
-    return send(500, err.message);
+    if (err instanceof Error) {
+      return send(500, err.message);
+    }
   }
 };
 
-module.exports.updateNote = async (event, context, callback) => {
+export const updateNote = async (
+  event: APIGatewayEvent,
+  context: Context,
+  callback: APIGatewayProxyCallback
+) => {
   context.callbackWaitsForEmptyEventLoop = false;
-  let notesId = event.pathParameters.id;
-  let data = JSON.parse(event.body);
+  let notesId = event.pathParameters?.id;
+  let data = JSON.parse(event.body as string);
 
   try {
     const params = {
@@ -68,14 +83,21 @@ module.exports.updateNote = async (event, context, callback) => {
     await dbDocClient.send(new UpdateCommand(params));
 
     return send(200, data);
-  } catch (err) {
-    return send(500, err.message);
+  } catch (err: unknown) {
+    //callback(null, send(500, err.message));
+    if (err instanceof Error) {
+      return send(500, err.message);
+    }
   }
 };
 
-module.exports.deleteNote = async (event, context, callback) => {
+export const deleteNote = async (
+  event: APIGatewayEvent,
+  context: Context,
+  callback: APIGatewayProxyCallback
+) => {
   context.callbackWaitsForEmptyEventLoop = false;
-  let notesId = event.pathParameters.id;
+  let notesId = event.pathParameters?.id;
 
   try {
     const params = {
@@ -87,13 +109,20 @@ module.exports.deleteNote = async (event, context, callback) => {
     const command = new DeleteCommand(params);
 
     const data = await dbDocClient.send(command);
-    return send(200, data);
-  } catch (err) {
-    return send(500, err.message);
+    return send(200, JSON.stringify(data));
+  } catch (err: unknown) {
+    //callback(null, send(500, err.message));
+    if (err instanceof Error) {
+      return send(500, err.message);
+    }
   }
 };
 
-module.exports.getAllNotes = async (event, context, callback) => {
+export const getAllNotes = async (
+  event: APIGatewayEvent,
+  context: Context,
+  callback: APIGatewayProxyCallback
+) => {
   context.callbackWaitsForEmptyEventLoop = false;
   console.log(JSON.stringify(event));
   try {
@@ -102,8 +131,11 @@ module.exports.getAllNotes = async (event, context, callback) => {
     };
 
     const notes = await dbDocClient.send(new ScanCommand(params));
-    return send(200, notes);
-  } catch (err) {
-    return send(500, err.message);
+    return send(200, JSON.stringify(notes));
+  } catch (err: unknown) {
+    //callback(null, send(500, err.message));
+    if (err instanceof Error) {
+      return send(500, err.message);
+    }
   }
 };
