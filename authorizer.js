@@ -9,6 +9,24 @@ const jwtVerifier = CognitoJwtVerifier.create({
 });
 
 const generatePolicy = (principalId, effect, resource) => {
+  var tmp = resource.split(":");
+  var apiGatewayArnTmp = tmp[5].split("/");
+
+  // Create wildcard resource
+  var resource =
+    tmp[0] +
+    ":" +
+    tmp[1] +
+    ":" +
+    tmp[2] +
+    ":" +
+    tmp[3] +
+    ":" +
+    tmp[4] +
+    ":" +
+    apiGatewayArnTmp[0] +
+    "/*/*";
+
   var authResponse = {};
 
   authResponse.principalId = principalId;
@@ -40,6 +58,7 @@ exports.handler = async (event, context, callback) => {
   try {
     const payload = await jwtVerifier.verify(token);
     console.log(JSON.stringify(payload));
+    callback(null, generatePolicy("user", "Allow", event.methodArn));
   } catch (err) {
     callback("Error: Invalid Token");
   }
