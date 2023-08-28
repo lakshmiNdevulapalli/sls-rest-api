@@ -1,5 +1,6 @@
 "use strict";
 const AWS = require("aws-sdk");
+require("dotenv").config();
 AWS.config.region = "us-east-1";
 const cognito = new AWS.CognitoIdentityServiceProvider();
 
