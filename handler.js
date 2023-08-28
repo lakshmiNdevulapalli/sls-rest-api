@@ -84,7 +84,9 @@ module.exports.deleteNote = async (event, context, callback) => {
       ConditionExpression: "attribute_exists(notesId)",
     };
 
-    await dbDocClient.send(DeleteCommand(params));
+    const command = new DeleteCommand(params);
+
+    const data = await dbDocClient.send(command);
     return send(200, data);
   } catch (err) {
     return send(500, err.message);
